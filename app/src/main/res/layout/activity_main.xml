@@ -34,4 +34,40 @@
         android:text="上游多次指定在不同线程，下游多次指定在不同线程(2)"
         android:onClick="setMultipartThread2"/>
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="后台线程做耗时操作,UI线程显示结果"
+        android:onClick="testRxjavaByme"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="map函数转换操作"
+        android:onClick="testMapConvert"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="flatmap函数转换操作"
+        android:onClick="testflatMap"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="zip 多个上游(事件)在同一个线程"
+        android:onClick="testZipSameThread"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="zip 多个上游(事件)在多个线程(快)"
+        android:onClick="testZipDiffenrentThread"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="一个界面多个请求，只有当所有请求回来之后才显示数据,使用Zip来打包请求"
+        android:onClick="testShowUIforMultipartRequest"/>
+
 </LinearLayout>

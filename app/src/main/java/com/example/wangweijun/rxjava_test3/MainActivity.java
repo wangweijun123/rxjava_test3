@@ -5,13 +5,21 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
+import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
@@ -33,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
                 Observable<Integer> observable = Observable.create(new ObservableOnSubscribe<Integer>() {
                     @Override
                     public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
-                        Log.i(TAG, "call subscribe tid:"+Thread.currentThread().getId());
+                        Log.i(TAG, "call subscribe tid:" + Thread.currentThread().getId());
                         emitter.onNext(1);// emitter 发射器
                         emitter.onNext(2);
                         emitter.onNext(3);
@@ -44,22 +52,22 @@ public class MainActivity extends AppCompatActivity {
                 Observer<Integer> observer = new Observer<Integer>() {
                     @Override
                     public void onSubscribe(Disposable d) {// Disposable 一次性的
-                        Log.i(TAG, "subscribe tid:"+Thread.currentThread().getId());
+                        Log.i(TAG, "subscribe tid:" + Thread.currentThread().getId());
                     }
 
                     @Override
                     public void onNext(Integer value) {
-                        Log.i(TAG, "" + value + ", tid:"+Thread.currentThread().getId());
+                        Log.i(TAG, "" + value + ", tid:" + Thread.currentThread().getId());
                     }
 
                     @Override
                     public void onError(Throwable e) {
-                        Log.i(TAG, "error "+ ", tid:"+Thread.currentThread().getId());
+                        Log.i(TAG, "error " + ", tid:" + Thread.currentThread().getId());
                     }
 
                     @Override
                     public void onComplete() {
-                        Log.i(TAG, "complete "+ ", tid:"+Thread.currentThread().getId());
+                        Log.i(TAG, "complete " + ", tid:" + Thread.currentThread().getId());
                     }
                 };
                 //建立连接
@@ -185,4 +193,274 @@ public class MainActivity extends AppCompatActivity {
                 .subscribe(consumer);
     }
 
+
+    /**
+     * 后台线程做耗时操作,UI线程显示结果
+     */
+    CompositeDisposable disposables = new CompositeDisposable();
+    boolean flag = true;
+    public void testRxjavaByme(View v) {
+        final int params = 5;
+        Observable<User> observable = Observable.create(new ObservableOnSubscribe<User>() {
+            @Override
+            public void subscribe(ObservableEmitter<User> emitter) throws Exception {
+                Log.i(TAG, "observable subscribe tid:" + Thread.currentThread().getId() + " 开始做耗时任务。。。");
+                Thread.sleep(2000);
+                User user = new User();
+                user.id = params;
+                emitter.onNext(user);
+
+                if (flag) {
+                    emitter.onComplete();
+                } else {
+                    emitter.onError(new Throwable("error"));
+                }
+                flag = !flag;
+            }
+        });
+
+        Observer<User> observer = new Observer<User>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+                disposables.add(d);
+                // 显示loading 进度条
+                Log.i(TAG, "observer  onSubscribe tid:" + Thread.currentThread().getId() + " 显示loading 进度条");
+            }
+
+            @Override
+            public void onNext(User value) {
+                Log.i(TAG, "observer  onNext value:" + value.id + ", tid:" + Thread.currentThread().getId());
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.i(TAG, "observer  onError  tid:" + Thread.currentThread().getId()+ ", 任务失败进度条消失");
+            }
+
+            @Override
+            public void onComplete() {
+                Log.i(TAG, "observer  onComplete  tid:" + Thread.currentThread().getId() + ", 任务完成进度条消失");
+            }
+        };
+        observable.subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(observer);
+    }
+
+
+    public void testMapConvert(View v) {
+        Observable.create(new ObservableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
+                emitter.onNext(1);
+                emitter.onNext(2);
+                emitter.onNext(3);
+            }
+        }).map(new Function<Integer, String>() {
+            @Override
+            public String apply(Integer integer) throws Exception {
+                Log.i(TAG, "apply 转换 "+ integer);
+                return integer.toString();
+            }
+        }).subscribe(new Consumer<String>() {
+            @Override
+            public void accept(String s) throws Exception {
+                Log.i(TAG, "accept s:" + s);
+            }
+        });
+    }
+
+    public void testflatMap(View v) {
+        Observable.create(new ObservableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
+                emitter.onNext(1);
+                emitter.onNext(2);
+                emitter.onNext(3);
+            }
+        }).flatMap(new Function<Integer, ObservableSource<String>>() {
+            @Override
+            public ObservableSource<String> apply(Integer integer) throws Exception {
+                final List<String> list = new ArrayList<>();
+                for (int i = 0; i < 3; i++) {
+                    list.add("I am value " + integer);
+                }
+                return Observable.fromIterable(list).delay(10, TimeUnit.MILLISECONDS);
+            }
+        }).subscribe(new Consumer<String>() {
+            @Override
+            public void accept(String s) throws Exception {
+                Log.d(TAG, s);
+            }
+        });
+    }
+
+
+    public void testZipSameThread(View v) {
+        Observable<Integer> observable1 = Observable.create(new ObservableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
+                Log.d(TAG, "emit 1");
+                emitter.onNext(1);
+                Log.d(TAG, "emit 2");
+                emitter.onNext(2);
+                Log.d(TAG, "emit 3");
+                emitter.onNext(3);
+                Log.d(TAG, "emit 4");
+                emitter.onNext(4);
+                Log.d(TAG, "emit complete1");
+                emitter.onComplete();
+            }
+        });
+
+        Observable<String> observable2 = Observable.create(new ObservableOnSubscribe<String>() {
+            @Override
+            public void subscribe(ObservableEmitter<String> emitter) throws Exception {
+                Log.d(TAG, "emit A");
+                emitter.onNext("A");
+                Log.d(TAG, "emit B");
+                emitter.onNext("B");
+                Log.d(TAG, "emit C");
+                emitter.onNext("C");
+                Log.d(TAG, "emit complete2");
+                emitter.onComplete();
+            }
+        });
+
+        Observable.zip(observable1, observable2, new BiFunction<Integer, String, String>() {
+            @Override
+            public String apply(Integer integer, String s) throws Exception {
+                return integer + s;
+            }
+        }).subscribe(new Observer<String>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+                Log.d(TAG, "onSubscribe");
+            }
+
+            @Override
+            public void onNext(String value) {
+                Log.d(TAG, "onNext: " + value);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.d(TAG, "onError");
+            }
+
+            @Override
+            public void onComplete() {
+                Log.d(TAG, "onComplete");
+            }
+        });
+
+    }
+
+
+    /**
+     *
+     * @param v
+     */
+    public void testZipDiffenrentThread(View v) {
+        Observable<Integer> observable1 = Observable.create(new ObservableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
+
+                Log.d(TAG, "emit 1");
+                emitter.onNext(1);
+
+
+
+                Log.d(TAG, "emit 2");
+                emitter.onNext(2);
+
+                Log.d(TAG, "emit 3");
+                emitter.onNext(3);
+
+                Log.d(TAG, "emit 4");
+                emitter.onNext(4);
+
+
+                Log.d(TAG, "emit complete1");
+                emitter.onComplete();
+            }
+        }).subscribeOn(Schedulers.io());
+
+        Observable<String> observable2 = Observable.create(new ObservableOnSubscribe<String>() {
+            @Override
+            public void subscribe(ObservableEmitter<String> emitter) throws Exception {
+
+                Log.d(TAG, "emit A");
+                emitter.onNext("A");
+
+                Log.d(TAG, "emit B");
+                emitter.onNext("B");
+
+                Log.d(TAG, "emit C");
+                emitter.onNext("C");
+
+
+                Log.d(TAG, "emit complete2");
+                emitter.onComplete();
+            }
+        }).subscribeOn(Schedulers.io());
+
+        Observable.zip(observable1, observable2, new BiFunction<Integer, String, String>() {
+            @Override
+            public String apply(Integer integer, String s) throws Exception {
+                return integer + s;
+            }
+        }).subscribe(new Observer<String>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+                Log.d(TAG, "onSubscribe");
+            }
+
+            @Override
+            public void onNext(String value) {
+                Log.d(TAG, "onNext: " + value);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.d(TAG, "onError");
+            }
+
+            @Override
+            public void onComplete() {
+                Log.d(TAG, "onComplete");
+            }
+        });
+    }
+
+    public void testShowUIforMultipartRequest(View v) {
+        final Api api = ApiService.createRetrofit().create(Api.class);
+        Observable<UserBaseInfoResponse> observable1 =
+                api.getUserBaseInfo(new UserBaseInfoRequest()).subscribeOn(Schedulers.io());
+
+        Observable<UserExtraInfoResponse> observable2 =
+                api.getUserExtraInfo(new UserExtraInfoRequest()).subscribeOn(Schedulers.io());
+
+        Observable.zip(observable1, observable2,
+                new BiFunction<UserBaseInfoResponse, UserExtraInfoResponse, UserInfo>() {
+                    @Override
+                    public UserInfo apply(UserBaseInfoResponse baseInfo,
+                                          UserExtraInfoResponse extraInfo) throws Exception {
+                        return new UserInfo(baseInfo, extraInfo);
+                    }
+                }).observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<UserInfo>() {
+                    @Override
+                    public void accept(UserInfo userInfo) throws Exception {
+                        //do something;
+
+                    }
+                });
+    }
+
+    @Override
+    protected void onDestroy() {
+        disposables.clear();
+        super.onDestroy();
+    }
 }
