@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="subscribe Observer"
+        android:onClick="subscribeObserver"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="subscribe Consumer"
+        android:onClick="subscribeConsumer"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="上游指定在子线程，下游指定在UI线程"
+        android:onClick="swithThread"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="上游多次指定在不同线程，下游多次指定在不同线程"
+        android:onClick="setMultipartThread"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="上游多次指定在不同线程，下游多次指定在不同线程(2)"
+        android:onClick="setMultipartThread2"/>
+
+</LinearLayout>
