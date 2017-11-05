@@ -16,3 +16,6 @@ Rxjava 基于事件驱动的框架
 1，注册完成自动登陆 使用 flatMap，查看ApiService
 
 2, 一个界面多个请求，只有当全部请求完之后才显示UI，zip 函数完成
+
+
+Android平台开源框架，了解EventBus，Retrofit，Volley，OKHTTP，Picasso，Dagger，RxJava第三方开源工具；
