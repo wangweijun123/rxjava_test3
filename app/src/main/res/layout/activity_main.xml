@@ -1,73 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_height="match_parent">
 
-    <Button
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="subscribe Observer"
-        android:onClick="subscribeObserver"/>
+        android:orientation="vertical">
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="subscribeObserver"
+            android:text="subscribe Observer" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="subscribe Consumer"
-        android:onClick="subscribeConsumer"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="subscribeConsumer"
+            android:text="subscribe Consumer" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="上游指定在子线程，下游指定在UI线程"
-        android:onClick="swithThread"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="swithThread"
+            android:text="上游指定在子线程，下游指定在UI线程" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="上游多次指定在不同线程，下游多次指定在不同线程"
-        android:onClick="setMultipartThread"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="setMultipartThread"
+            android:text="上游多次指定在不同线程，下游多次指定在不同线程" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="上游多次指定在不同线程，下游多次指定在不同线程(2)"
-        android:onClick="setMultipartThread2"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="setMultipartThread2"
+            android:text="上游多次指定在不同线程，下游多次指定在不同线程(2)" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="后台线程做耗时操作,UI线程显示结果"
-        android:onClick="testRxjavaByme"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="testRxjavaByme"
+            android:text="后台线程做耗时操作,UI线程显示结果" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="map函数转换操作"
-        android:onClick="testMapConvert"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="testMapConvert"
+            android:text="map函数转换操作" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="flatmap函数转换操作"
-        android:onClick="testflatMap"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="testflatMap"
+            android:text="flatmap函数转换操作" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="zip 多个上游(事件)在同一个线程"
-        android:onClick="testZipSameThread"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="testZipSameThread"
+            android:text="zip 多个上游(事件)在同一个线程" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="zip 多个上游(事件)在多个线程(快)"
-        android:onClick="testZipDiffenrentThread"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="testZipDiffenrentThread"
+            android:text="zip 多个上游(事件)在多个线程(快)" />
 
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="一个界面多个请求，只有当所有请求回来之后才显示数据,使用Zip来打包请求"
-        android:onClick="testShowUIforMultipartRequest"/>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="testShowUIforMultipartRequest"
+            android:text="一个界面多个请求，只有当所有请求回来之后才显示数据,使用Zip来打包请求" />
 
-</LinearLayout>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="testSendEventForever"
+            android:text="上游死循环发送事件" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="testFlowable"
+            android:text="Flowable采用响应式方式" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="testFlowable2"
+            android:text="Flowable采用响应式方式(同步下游告诉上游能处理多少个请求request)" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="testFlowable3"
+            android:text="Flowable采用响应式方式(异步下游告诉上游能处理多少个请求request)" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="testFlowable4"
+            android:text="Flowable 从外部读取大文件,读一行处理一行" />
+
+    </LinearLayout>
+</ScrollView>

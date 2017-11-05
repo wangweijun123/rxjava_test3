@@ -11,6 +11,7 @@ top level build.gradle
 com.android.tools.build:gradle:2.3.3  对应 studio\gradle\m2repository\com\android\tools\build\gradle
 
 
+Rxjava 基于事件驱动的框架
 
 1，注册完成自动登陆 使用 flatMap，查看ApiService
 
