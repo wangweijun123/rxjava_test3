@@ -1,12 +1,17 @@
 package com.example.wangweijun.rxjava_test3;
 
 import android.content.Context;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -42,7 +47,9 @@ public class ApiService {
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
     }
+
     CompositeDisposable disposables = new CompositeDisposable();
+
     // 网络请求
     public void testNetwork(final Context mContext) {
         Api api = createRetrofit().create(Api.class);
@@ -57,7 +64,8 @@ public class ApiService {
                     }
 
                     @Override
-                    public void onNext(LoginResponse value) {}
+                    public void onNext(LoginResponse value) {
+                    }
 
                     @Override
                     public void onError(Throwable e) {
@@ -111,6 +119,7 @@ public class ApiService {
 
     /**
      * 切换线程是多么简单
+     *
      * @param mContext
      */
     private void loginAndRegister(final Context mContext) {
@@ -166,4 +175,134 @@ public class ApiService {
 //            }
 //        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
 //    }
+private static final String TAG = "XX";
+
+    public static void RxRetrofitList() {
+        Api service = GenServiceUtil.createService(Api.class);
+        Observable<List<UserFollowerBean>> myObserve = service.followers("lucas");
+        myObserve
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(new Function<List<UserFollowerBean>, List<UserFollowerBean>>() {
+                    @Override
+                    public List<UserFollowerBean> apply(List<UserFollowerBean> userFollowerBeen) {
+                        for (UserFollowerBean bean : userFollowerBeen) {
+                            String name = "";
+                            name = bean.getLogin().substring(0, 1).toUpperCase() + bean.getLogin().substring(1, bean.getLogin().length());
+                            bean.setLogin(name);
+                        }
+                        return userFollowerBeen;
+                    }
+                })
+                .map(new Function<List<UserFollowerBean>, List<UserFollowerBean>>() {
+                    @Override
+                    public List<UserFollowerBean> apply(List<UserFollowerBean> userFollowerBean) {
+                        Collections.sort(userFollowerBean, new Comparator<UserFollowerBean>() {
+                            @Override
+                            public int compare(UserFollowerBean o1, UserFollowerBean o2) {
+                                return o1.getLogin().compareTo(o2.getLogin());
+                            }
+                        });
+                        return userFollowerBean;
+                    }
+                })
+                .subscribe(new Observer<List<UserFollowerBean>>() {
+
+                    @Override
+                    public void onSubscribe(Disposable d) {
+                        Log.i(TAG, "onSubscribe");
+                    }
+
+                    @Override
+                    public void onNext(List<UserFollowerBean> value) {
+                        Log.i(TAG, "onNext");
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                        Log.i(TAG, "onError");
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        Log.i(TAG, "onComplete");
+                    }
+                });
+    }
+
+
+    public static void rxRetrofitList2() {
+        Api service = GenServiceUtil.createService(Api.class);
+        Observable<List<ApiService.Contributor>> myObserve = service.contributors("square", "retrofit");
+        myObserve
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(new Function<List<ApiService.Contributor>, List<ApiService.Contributor>>() {
+                    @Override
+                    public List<ApiService.Contributor> apply(List<ApiService.Contributor> userFollowerBeen) {
+                        Log.i(TAG, "map1 apply tid:"+Thread.currentThread().getName());
+                        for (ApiService.Contributor bean : userFollowerBeen) {
+//                            String name = "";
+                        }
+                        return userFollowerBeen;
+                    }
+                })
+                .map(new Function<List<ApiService.Contributor>, List<ApiService.Contributor>>() {
+                    @Override
+                    public List<ApiService.Contributor> apply(List<ApiService.Contributor> userFollowerBean) {
+//                        Collections.sort(userFollowerBean, new Comparator<UserFollowerBean>() {
+//                            @Override
+//                            public int compare(UserFollowerBean o1, UserFollowerBean o2) {
+//                                return o1.getLogin().compareTo(o2.getLogin());
+//                            }
+//                        });
+                        Log.i(TAG, "map2 apply tid:"+Thread.currentThread().getName());
+                        return userFollowerBean;
+                    }
+                })
+                .subscribe(new Observer<List<ApiService.Contributor>>() {
+
+                    @Override
+                    public void onSubscribe(Disposable d) {
+                        Log.i(TAG, "onSubscribe tid:"+Thread.currentThread().getName());
+                    }
+
+                    @Override
+                    public void onNext(List<ApiService.Contributor> list) {
+                        Log.i(TAG, "onNext tid:"+Thread.currentThread().getName());
+                        for (int i=0; i<list.size(); i++) {
+                            Log.i(TAG, list.get(i).toString());
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        e.printStackTrace();
+                        Log.i(TAG, "onError");
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        Log.i(TAG, "onComplete");
+                    }
+                });
+    }
+
+    public static final String API_URL = "https://api.github.com";
+
+    public static class Contributor {
+        public final String login;
+        public final int contributions;
+
+        public Contributor(String login, int contributions) {
+            this.login = login;
+            this.contributions = contributions;
+        }
+
+        @Override
+        public String toString() {
+            return "login:"+login+", contributions:"+contributions;
+        }
+    }
 }

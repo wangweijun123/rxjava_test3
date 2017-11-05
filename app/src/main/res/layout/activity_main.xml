@@ -103,5 +103,11 @@
             android:onClick="testFlowable4"
             android:text="Flowable 从外部读取大文件,读一行处理一行" />
 
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="testRxjavaAndRetrofit"
+            android:text="测试 Rxjava 与Retrofit搭配使用" />
+
     </LinearLayout>
 </ScrollView>

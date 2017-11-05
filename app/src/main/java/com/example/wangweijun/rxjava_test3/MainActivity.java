@@ -670,6 +670,10 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+
+    public void testRxjavaAndRetrofit(View v) {
+        ApiService.rxRetrofitList2();
+    }
     @Override
     protected void onDestroy() {
         disposables.clear();
