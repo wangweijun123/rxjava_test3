@@ -332,11 +332,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getFirstPageAndRankList(View v) {
-        ApiService.getFirstPageAndRankList();
+//        ApiService.getFirstPageAndRankList();
+//        boolean flag = hasShortcut(this, "Rxjava_test3");
+        boolean flag = launcherUtil.isShortCutExist(getApplicationContext(), "北京燃气");
+        Log.i(TAG, "flag: " + flag);
     }
-
-
-
 
     @Override
     protected void onDestroy() {
