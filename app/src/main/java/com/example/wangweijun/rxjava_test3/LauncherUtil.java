@@ -18,7 +18,7 @@ import java.util.List;
  * Created by wangweijun on 2017/11/6.
  */
 
-public class launcherUtil {
+public class LauncherUtil {
     private static String AUTHORITY = null;
 
     public static boolean isShortCutExist(Context context, String title) {
