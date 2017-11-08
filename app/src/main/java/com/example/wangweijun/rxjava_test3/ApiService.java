@@ -470,6 +470,10 @@ private static final String TAG = "XX";
                 });
     }
 
+
+
+
+
     public static Map<String, String> getCommonParamsMap() {
         Map<String, String> commonParamsMap = new HashMap<String, String>();
         commonParamsMap.put("mac", "");

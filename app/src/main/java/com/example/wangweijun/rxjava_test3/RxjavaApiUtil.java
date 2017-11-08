@@ -1,11 +1,22 @@
 package com.example.wangweijun.rxjava_test3;
 
+import android.os.Environment;
 import android.util.Log;
 
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
+import io.reactivex.FlowableEmitter;
+import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
@@ -445,6 +456,206 @@ public class RxjavaApiUtil {
                 });
     }
 
+    public static void testSendEventForever() {
+        Observable.create(new ObservableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
+                for (int i = 0; ; i++) {    //无限循环发事件(如果下游没有及时处理，发送的事件全部进入水缸，总有会爆掉),
+                    emitter.onNext(i);
+                }
+            }
+        }).subscribeOn(Schedulers.io())// 上游在IO线程
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<Integer>() {
+                    @Override
+                    public void accept(Integer integer) throws Exception {
+                        Thread.sleep(2000);
+                        Log.d(TAG, "" + integer);
+                    }
+                });
+    }
 
+
+    public static void testFlowable() {
+        Flowable.create(new FlowableOnSubscribe<Integer>() {
+            @Override
+            public void subscribe(FlowableEmitter<Integer> emitter) throws Exception {
+                Log.d(TAG, "emit 1");
+                emitter.onNext(1);
+                Log.d(TAG, "emit 2");
+                emitter.onNext(2);
+                Log.d(TAG, "emit 3");
+                emitter.onNext(3);
+                Log.d(TAG, "emit complete");
+                emitter.onComplete();
+            }
+        }, BackpressureStrategy.ERROR).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<Integer>() {
+                    Subscription mSubscription;
+
+                    @Override
+                    public void onSubscribe(Subscription s) {
+                        Log.d(TAG, "onSubscribe");
+                        mSubscription = s;
+                        s.request(1);
+                    }
+
+                    @Override
+                    public void onNext(Integer integer) {
+                        Log.d(TAG, "onNext: " + integer);
+                        mSubscription.request(1);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        Log.w(TAG, "onError: ", t);
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        Log.d(TAG, "onComplete");
+                    }
+                });
+    }
+
+
+    public static void testFlowable2() {
+        Flowable
+                .create(new FlowableOnSubscribe<Integer>() {
+                    @Override
+                    public void subscribe(FlowableEmitter<Integer> emitter) throws Exception {
+                        Log.d(TAG, "current requested: " + emitter.requested());
+                    }
+                }, BackpressureStrategy.ERROR)
+                .subscribe(new Subscriber<Integer>() {
+                    Subscription mSubscription;
+
+                    @Override
+                    public void onSubscribe(Subscription s) {
+                        Log.d(TAG, "onSubscribe");
+                        mSubscription = s;
+                        s.request(10);// 告诉上游我能处理十个
+                    }
+
+                    @Override
+                    public void onNext(Integer integer) {
+                        Log.d(TAG, "onNext: " + integer);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        Log.w(TAG, "onError: ", t);
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        Log.d(TAG, "onComplete");
+                    }
+                });
+    }
+
+    public static void testFlowable3() {
+        Flowable
+                .create(new FlowableOnSubscribe<Integer>() {
+                    @Override
+                    public void subscribe(FlowableEmitter<Integer> emitter) throws Exception {
+                        Log.d(TAG, "current requested: " + emitter.requested());
+                    }
+                }, BackpressureStrategy.ERROR)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Subscriber<Integer>() {
+                    Subscription mSubscription;
+
+                    @Override
+                    public void onSubscribe(Subscription s) {
+                        Log.d(TAG, "onSubscribe");
+                        mSubscription = s;
+                        s.request(1000);// 告诉上游我能处理十个
+                    }
+
+                    @Override
+                    public void onNext(Integer integer) {
+                        Log.d(TAG, "onNext: " + integer);
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        Log.w(TAG, "onError: ", t);
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        Log.d(TAG, "onComplete");
+                    }
+                });
+    }
+
+    public static void testFlowable4() {
+        Flowable
+                .create(new FlowableOnSubscribe<String>() {
+                    @Override
+                    public void subscribe(FlowableEmitter<String> emitter) throws Exception {
+                        try {
+                            File dir = Environment.getExternalStorageDirectory();
+                            Log.i(TAG, dir.getAbsolutePath());
+                            File testFile = new File(dir, "build.xml");
+                            FileReader reader = new FileReader(testFile);
+                            BufferedReader br = new BufferedReader(reader);
+
+                            String str;
+
+                            while ((str = br.readLine()) != null && !emitter.isCancelled()) {
+                                while (emitter.requested() == 0) {
+                                    if (emitter.isCancelled()) {
+                                        break;
+                                    }
+                                }
+                                emitter.onNext(str);
+                            }
+
+                            br.close();
+                            reader.close();
+
+                            emitter.onComplete();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            emitter.onError(e);
+                        }
+                    }
+                }, BackpressureStrategy.ERROR)
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.newThread())
+                .subscribe(new Subscriber<String>() {
+                    Subscription mSubscription;
+
+                    @Override
+                    public void onSubscribe(Subscription s) {
+                        mSubscription = s;
+                        s.request(1);
+                    }
+
+                    @Override
+                    public void onNext(String string) {
+                        Log.i(TAG, string);
+                        try {
+                            Thread.sleep(2000);
+                            mSubscription.request(1);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        Log.i(TAG, "onError");
+                    }
+
+                    @Override
+                    public void onComplete() {
+                    }
+                });
+    }
 
 }
