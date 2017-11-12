@@ -30,7 +30,11 @@ rxjava 数据的流向清晰
 
 学习一个技术，为什么要学习它，好处是什么，更加深一点的是，怎么实现的(大牛实现的),善于总结
 
+Observer, Observer
+rxjava 核心思想是观察者(observer)与被观察者模式(observable),
 
+rxjava 很NB的地方，就是线程自由的控制，
 
-
-
+1, 观察者模式--(扩展的)
+2, Scheduler (线程控制，线程调度)
+3, 变换 (map函数操作)
