@@ -259,7 +259,7 @@ public class RxjavaApiUtil {
         Observable.create(new ObservableOnSubscribe<Integer>() {
             @Override// 上游发送 (执行线程都可以指定)
             public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
-                Log.i(TAG, "subscribe tid:" + Thread.currentThread().getName());
+                Log.i(TAG, "subscribe tid:" + Thread.currentThread().getId());
                 Log.i(TAG, "send 1");
                 emitter.onNext(1);
                 Log.i(TAG, "send 2");
@@ -271,7 +271,7 @@ public class RxjavaApiUtil {
                 .map(new Function<Integer, String>() {
                     @Override// 中间转化(执行线程都可以指定)
                     public String apply(Integer integer) throws Exception {
-                        Log.i(TAG, "apply 转换 " + integer + ", tid:" + Thread.currentThread().getName());
+                        Log.i(TAG, "apply 转换 " + integer + ", tid:" + Thread.currentThread().getId());
                         return integer.toString();
                     }
                 })
@@ -279,7 +279,7 @@ public class RxjavaApiUtil {
                 .subscribe(new Consumer<String>() {
                     @Override// 下游接收(执行线程都可以指定)
                     public void accept(String s) throws Exception {
-                        Log.i(TAG, "accept s:" + s + ", tid:" + Thread.currentThread().getName());
+                        Log.i(TAG, "accept s:" + s + ", tid:" + Thread.currentThread().getId());
                     }
                 });
     }
@@ -308,6 +308,8 @@ public class RxjavaApiUtil {
             }
         });
     }
+
+
 
 
     public static void testZipSameThread() {

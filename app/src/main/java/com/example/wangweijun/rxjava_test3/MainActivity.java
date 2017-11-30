@@ -60,6 +60,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    public void testConcatMap(View v) {
+       ApiService.rxRetrofitList3();
+    }
+
+
     public void testZipSameThread(View v) {
         RxjavaApiUtil.testZipSameThread();
     }

@@ -15,6 +15,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
+import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -211,10 +213,11 @@ private static final String TAG = "XX";
         Observable<List<ApiService.Contributor>> myObserve = service.contributors("square", "retrofit");
         myObserve
                 .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
+                .observeOn(Schedulers.io())// 已经到了下游
                 .map(new Function<List<ApiService.Contributor>, List<ApiService.Contributor>>() {
                     @Override
                     public List<ApiService.Contributor> apply(List<ApiService.Contributor> userFollowerBeen) {
+                        // 这里已经到了下游，所以使用observeOn指定线程
                         Log.i(TAG, "map1 apply tid:"+Thread.currentThread().getName());
                         for (ApiService.Contributor bean : userFollowerBeen) {
 //                            String name = "";
@@ -222,6 +225,7 @@ private static final String TAG = "XX";
                         return userFollowerBeen;
                     }
                 })
+                .observeOn(Schedulers.io())
                 .map(new Function<List<ApiService.Contributor>, List<ApiService.Contributor>>() {
                     @Override
                     public List<ApiService.Contributor> apply(List<ApiService.Contributor> userFollowerBean) {
@@ -235,6 +239,7 @@ private static final String TAG = "XX";
                         return userFollowerBean;
                     }
                 })
+                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<List<ApiService.Contributor>>() {
 
                     @Override
@@ -261,6 +266,50 @@ private static final String TAG = "XX";
                         Log.i(TAG, "onComplete");
                     }
                 });
+    }
+
+
+    public static void rxRetrofitList3() {
+        Api service = GenServiceUtil.createService(Api.class);
+        Observable<List<ApiService.Contributor>> myObserve = service.contributors("square", "retrofit");
+        myObserve
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .concatMap(new Function<List<Contributor>, ObservableSource<Contributor>>() {
+                    @Override
+                    public ObservableSource<Contributor> apply(final List<Contributor> contributors) throws Exception {
+                        return Observable.create(new ObservableOnSubscribe<Contributor>() {
+                            @Override
+                            public void subscribe(ObservableEmitter<Contributor> emitter) throws Exception {
+                                Log.i("wang", "subscribe tid:"+Thread.currentThread().getId());
+                                for (Contributor contributor : contributors) {
+                                    Log.i("wang", " emitter 发射 contributor:" + contributor);
+                                    emitter.onNext(contributor);
+                                }
+                                emitter.onComplete();
+                            }
+                        });
+                    }
+                }).observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Contributor>() {
+                        @Override
+                        public void onSubscribe(Disposable d) {
+                            Log.i("wang", "onSubscribe tid:"+Thread.currentThread().getId());
+                        }
+                        @Override
+                        public void onNext(Contributor value) {
+                            Log.i("wang", "onNext tid:"+Thread.currentThread().getId()+", value:"+value);
+                        }
+                        @Override
+                        public void onError(Throwable e) {
+
+                        }
+                        @Override
+                        public void onComplete() {
+                            Log.i("wang", "onComplete tid:"+Thread.currentThread().getId());
+                        }
+                }
+        );
     }
 
     public static final String API_URL = "https://api.github.com";

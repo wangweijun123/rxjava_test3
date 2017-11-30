@@ -58,6 +58,12 @@
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:onClick="testConcatMap"
+            android:text="ConcatMap函数转换操作" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:onClick="testZipSameThread"
             android:text="zip 多个上游(事件)在同一个线程" />
 
@@ -65,7 +71,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="testZipDiffenrentThread"
-            android:text="zip 多个上游(事件,多个api并发请求，全部完成后显示后)在多个线程(快)" />
+            android:text="zip 多个上游(事件,多个api并发请求在不同线程，全部完成后显示后)在多个线程(快)" />
 
         <Button
             android:layout_width="match_parent"
