@@ -7,6 +7,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
+
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="loadDataFromDatabaseAndNetwork"
+            android:text="读取数据库缓存，显示，网络加载，更新数据库，刷新界面" />
+
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

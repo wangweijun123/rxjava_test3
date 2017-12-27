@@ -11,7 +11,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
@@ -29,12 +28,109 @@ import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
+import static android.R.attr.value;
+
 /**
  * Created by wangweijun1 on 2017/11/6.
  */
 
 public class RxjavaApiUtil {
     private static final String TAG = "RxjavaApiUtil";
+
+    public static void loadDataFromDatabaseAndNetwork() {
+        Observable.create(new ObservableOnSubscribe<List<User>>() {
+            @Override
+            public void subscribe(ObservableEmitter<List<User>> emitter) throws Exception {
+                Log.i(TAG, "正在读取数据库缓存 tid:" + Thread.currentThread().getId());
+                Thread.sleep(3000);
+                Log.i(TAG, "读取数据库缓存完毕");
+                List<User> list = new ArrayList<User>();
+                User user = new User();
+                user.id = 1000;
+                list.add(user);
+                emitter.onNext(list);// onNext中事件对像为null，回调onError, 不为null回调onNext
+                emitter.onComplete();
+            }
+        })
+        .subscribeOn(Schedulers.io())
+        .observeOn(AndroidSchedulers.mainThread())
+        .doOnNext(new Consumer<List<User>>() {
+            @Override
+            public void accept(List<User> users) throws Exception {
+                Log.i(TAG, "数据库缓存返回 accept tid:" + Thread.currentThread().getId());
+                for (User user : users) {
+                    Log.i(TAG,user.toString());
+                }
+            }
+        }).observeOn(Schedulers.io()) //注意方法名字这里指定的线程
+        .flatMap(new Function<List<User>, ObservableSource<List<Record>>>() {
+            @Override
+            public ObservableSource<List<Record>> apply(final List<User> users) throws Exception {
+                return Observable.create(new ObservableOnSubscribe<List<Record>>(){
+                    @Override
+                    public void subscribe(ObservableEmitter<List<Record>> emitter) throws Exception {
+                        Log.i(TAG, "正在网络加载 tid:" + Thread.currentThread().getId());
+                        Thread.sleep(3000);
+                        Log.i(TAG, "网络加载完毕");
+                        List<Record> list = new ArrayList<Record>();
+                        for (User user :  users) {
+                            Record record = new Record();
+                            record.id = user.id;
+                            list.add(record);
+                        }
+                        emitter.onNext(list);// onNext中事件对像为null，回调onError, 不为null回调onNext
+                        emitter.onComplete();
+                    }
+                });
+            }
+        })//.observeOn(Schedulers.io())// 这里可以不切换线程
+        .flatMap(new Function<List<Record>, ObservableSource<List<Pig>>>() {
+            @Override
+            public ObservableSource<List<Pig>> apply(final List<Record> records) throws Exception {
+                return Observable.create(new ObservableOnSubscribe<List<Pig>>() {
+                    @Override
+                    public void subscribe(ObservableEmitter<List<Pig>> emitter) throws Exception {
+                        Log.i(TAG, "更新数据库缓存 tid:" + Thread.currentThread().getId());
+                        Thread.sleep(3000);
+                        Log.i(TAG, "更新数据库缓存完毕");
+                        List<Pig> list = new ArrayList<Pig>();
+                        for (Record record :  records) {
+                            Pig pig = new Pig();
+                            pig.id = record.id;
+                            list.add(pig);
+                        }
+                        emitter.onNext(list);// onNext中事件对像为null，回调onError, 不为null回调onNext
+                        emitter.onComplete();
+                    }
+                });
+            }
+        }).observeOn(AndroidSchedulers.mainThread())
+        .subscribe(new Observer<List<Pig>>() {
+            @Override
+            public void onSubscribe(Disposable d) {
+                Log.i(TAG, "onSubscribe tid:" + Thread.currentThread().getId());
+            }
+
+            @Override
+            public void onNext(List<Pig> list) {
+                Log.i(TAG, "onNext tid:" + Thread.currentThread().getId());
+                for (Pig pig : list) {
+                    Log.i(TAG,pig.toString());
+                }
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                Log.i(TAG, "onError tid:" + Thread.currentThread().getId());
+            }
+
+            @Override
+            public void onComplete() {
+                Log.i(TAG, "onComplete tid:" + Thread.currentThread().getId());
+            }
+        });
+
+    }
 
     /**
      * 订阅observer，如果没指定上游与下游线程，默认就是当前线程
@@ -268,42 +364,50 @@ public class RxjavaApiUtil {
                 emitter.onNext(3);
             }
         }).subscribeOn(Schedulers.io())
-                .map(new Function<Integer, String>() {
-                    @Override// 中间转化(执行线程都可以指定)
-                    public String apply(Integer integer) throws Exception {
-                        Log.i(TAG, "apply 转换 " + integer + ", tid:" + Thread.currentThread().getId());
-                        return integer.toString();
-                    }
-                })
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new Consumer<String>() {
-                    @Override// 下游接收(执行线程都可以指定)
-                    public void accept(String s) throws Exception {
-                        Log.i(TAG, "accept s:" + s + ", tid:" + Thread.currentThread().getId());
-                    }
-                });
+        .map(new Function<Integer, String>() {
+            @Override// 中间转化(执行线程都可以指定)
+            public String apply(Integer integer) throws Exception {
+                Log.i(TAG, "apply 转换 " + integer + ", tid:" + Thread.currentThread().getId());
+                return integer.toString();
+            }
+        })
+        .observeOn(AndroidSchedulers.mainThread())
+        .subscribe(new Consumer<String>() {
+            @Override// 下游接收(执行线程都可以指定)
+            public void accept(String s) throws Exception {
+                Log.i(TAG, "accept s:" + s + ", tid:" + Thread.currentThread().getId());
+            }
+        });
     }
 
     public static void testflatMap() {
         Observable.create(new ObservableOnSubscribe<Integer>() {
             @Override
             public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
+                Log.d(TAG, "00000 tid:"+Thread.currentThread().getId()+", name:"+Thread.currentThread().getName());
                 emitter.onNext(1);
                 emitter.onNext(2);
-                emitter.onNext(3);
+                emitter.onComplete();
             }
-        }).flatMap(new Function<Integer, ObservableSource<String>>() {
+        }).subscribeOn(Schedulers.io())// 指定上游thread，上游只有一个
+        .observeOn(Schedulers.newThread()) // 指定下游thread，每一个下游泡在每个指定的线程中
+        .flatMap(new Function<Integer, ObservableSource<String>>() {
             @Override
-            public ObservableSource<String> apply(Integer integer) throws Exception {
-                final List<String> list = new ArrayList<>();
-                for (int i = 0; i < 3; i++) {
-                    list.add("I am value " + integer);
-                }
-                return Observable.fromIterable(list).delay(10, TimeUnit.MILLISECONDS);
+            public ObservableSource<String> apply(final Integer integer) throws Exception {
+                return Observable.create(new ObservableOnSubscribe<String>() {
+                    @Override
+                    public void subscribe(ObservableEmitter<String> emitter) throws Exception {
+                        Log.d(TAG, "fffff tid:"+Thread.currentThread().getId()+", name:"+Thread.currentThread().getName());
+                        emitter.onNext(integer.toString()+"xxxx");
+                        emitter.onComplete();
+                    }
+                });
             }
-        }).subscribe(new Consumer<String>() {
+        }).observeOn(AndroidSchedulers.mainThread())
+        .subscribe(new Consumer<String>() {
             @Override
             public void accept(String s) throws Exception {
+                Log.d(TAG, "accept tid:"+Thread.currentThread().getId()+", name:"+Thread.currentThread().getName());
                 Log.d(TAG, s);
             }
         });
@@ -417,6 +521,68 @@ public class RxjavaApiUtil {
 
                     @Override
                     public void onNext(String value) {
+                        Log.d(TAG, "onNext: " + value + ", tid:" + Thread.currentThread().getId());
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.d(TAG, "onError");
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        Log.d(TAG, "onComplete");
+                    }
+                });
+    }
+
+
+    public static void testZipDiffenrentThread2() {
+        Observable<Pig> observable1 = Observable.create(new ObservableOnSubscribe<Pig>() {
+            @Override
+            public void subscribe(ObservableEmitter<Pig> emitter) throws Exception {
+                Log.d(TAG, "上游生成pig开始 tid:" + Thread.currentThread().getId());
+                Thread.sleep(3000);
+                Pig pig = new Pig();
+                pig.id = 1000;
+                Log.d(TAG, "上游生成pig完成");
+                emitter.onNext(pig);
+                emitter.onComplete();
+            }
+        }).subscribeOn(Schedulers.io());
+
+        Observable<Record> observable2 = Observable.create(new ObservableOnSubscribe<Record>() {
+            @Override
+            public void subscribe(ObservableEmitter<Record> emitter) throws Exception {
+                Log.d(TAG, "上游生成record 开始 tid:" + Thread.currentThread().getId());
+
+                Thread.sleep(3000);
+                Record record = new Record();
+                record.id = 1;
+                Log.d(TAG, "上游生成pig完成");
+                emitter.onNext(record);
+                emitter.onComplete();
+            }
+        }).subscribeOn(Schedulers.io());
+
+        Observable.zip(observable1, observable2, new BiFunction<Pig, Record, User>() {
+            @Override
+            public User apply(Pig pig, Record record) throws Exception {
+                Log.d(TAG, "apply 生成用户 tid:" + Thread.currentThread().getId());
+                User user = new User();
+                user.pig = pig;
+                user.record = record;
+                return user;
+            }
+        }).observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<User>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+                        Log.d(TAG, "onSubscribe");
+                    }
+
+                    @Override
+                    public void onNext(User user) {
                         Log.d(TAG, "onNext: " + value + ", tid:" + Thread.currentThread().getId());
                     }
 

@@ -5,4 +5,11 @@ package com.example.wangweijun.rxjava_test3;
  */
 
 class Record {
+
+    public int id;
+
+    @Override
+    public String toString() {
+        return "[Record id:"+id+" ]";
+    }
 }
