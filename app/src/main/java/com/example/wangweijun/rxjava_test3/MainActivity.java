@@ -82,6 +82,17 @@ public class MainActivity extends AppCompatActivity {
         RxjavaApiUtil.testZipDiffenrentThread();
     }
 
+
+    public void testZipDiffenrentThread2(View v) {
+        RxjavaApiUtil.testZipDiffenrentThread2();
+    }
+
+    public void testZipArrayMany(View v) {
+        RxjavaApiUtil.testZipArrayMany();
+    }
+
+
+
     public void testShowUIforMultipartRequest(View v) {
         ApiService.testZip();
     }
