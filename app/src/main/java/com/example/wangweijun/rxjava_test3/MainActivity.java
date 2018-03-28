@@ -167,6 +167,12 @@ public class MainActivity extends AppCompatActivity {
         ApiService.registerAndLogin2(getApplicationContext());
     }
 
+    public void testFilter(View v) {
+        RxjavaApiUtil.testFilter();
+    }
+
+
+
     @Override
     protected void onDestroy() {
         disposables.clear();

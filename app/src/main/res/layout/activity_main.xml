@@ -188,5 +188,13 @@
             android:layout_height="wrap_content"
             android:onClick="registerAndLogin2"
             android:text="使用flatmap实现注册后自动登陆" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="testFilter"
+            android:text="test Filter" />
+
+
     </LinearLayout>
 </ScrollView>

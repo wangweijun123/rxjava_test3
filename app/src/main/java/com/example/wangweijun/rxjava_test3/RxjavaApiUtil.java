@@ -29,8 +29,8 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
+import io.reactivex.functions.Predicate;
 import io.reactivex.schedulers.Schedulers;
-import retrofit2.http.HEAD;
 
 /**
  * Created by wangweijun1 on 2017/11/6.
@@ -977,6 +977,40 @@ public class RxjavaApiUtil {
                         Log.i(TAG, "onComplete");
                     }
                 });
+    }
+
+
+    public static void testFilter() {
+        // ObservableOnSubscribe 事件源
+        Observable.create(new ObservableOnSubscribe<List<String>>() {
+            @Override
+            public void subscribe(ObservableEmitter<List<String>> e) throws Exception {
+                // 事件源业务代码
+                List<String> result = new ArrayList<>();
+                result.add("xxxxx");
+                result.add("aaaa");
+                Log.i(TAG, "onNext s:" + result);
+                e.onNext(result);
+            }
+        }).filter(new Predicate<List<String>>() {
+            @Override
+            public boolean test(List<String> s) throws Exception {
+                Log.i(TAG, "test s:" + s);
+                s.remove(1);
+                return true;
+            }
+        }).subscribe(new Consumer<List<String>>() {
+            @Override
+            public void accept(List<String> s) throws Exception {
+                // 订阅者业务代码
+                Log.i(TAG, "accept s:" + s);
+            }
+        }, new Consumer<Throwable>() {
+            @Override
+            public void accept(Throwable throwable) throws Exception {
+                Log.i(TAG, "throwable :");
+            }
+        });
     }
 
 }
