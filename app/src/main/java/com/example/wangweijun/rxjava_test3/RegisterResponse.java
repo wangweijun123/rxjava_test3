@@ -5,4 +5,11 @@ package com.example.wangweijun.rxjava_test3;
  */
 
 class RegisterResponse {
+
+    String name;
+    String pwd;
+    public RegisterResponse(String name, String pwd) {
+        this.name = name;
+        this.pwd = pwd;
+    }
 }

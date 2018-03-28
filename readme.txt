@@ -38,3 +38,30 @@ rxjava 很NB的地方，就是线程自由的控制，
 1, 观察者模式--(扩展的)
 2, Scheduler (线程控制，线程调度)
 3, 变换 (map函数操作)
+
+1, 链式调用
+2, 线程切换
+3, 数据转换
+
+observalbe observer rxjava是扩展得观察者模式,线程切换非常方便, map, zip 函数等等操作
+非常方便, 有上游下游的概率
+
+map 转化操作(String ----> Integer)
+
+backpress (Flowable) 下游告诉上游自己能处理多少个事件，超过设定的值收不到
+
+zip 合并两个请求(并发),适合在一个界面需要多个请求的时候，只有当所有请求成功后才会有调用下游的observer.onNext()方法
+
+flatmap --->窜行,两个api有依赖，比如注册并自动登陆(登陆需要用到注册返回的参数)
+
+concatMap 请求一个列表list,可以一个一个发送到observer,一个一个的显示
+
+
+
+
+
+
+
+
+
+

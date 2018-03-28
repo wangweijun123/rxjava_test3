@@ -10,6 +10,12 @@
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:onClick="testRxjava"
+            android:text="rxjava简单测试" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:onClick="subscribeObserver"
             android:text="订阅Observer" />
 
@@ -72,6 +78,14 @@
             android:layout_height="wrap_content"
             android:onClick="testZipDiffenrentThread"
             android:text="zip 多个上游(事件,多个api并发请求在不同线程，全部完成后显示后)在多个线程(快)" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="testZipDiffenrentThread2"
+            android:text="zip 多个上游2" />
+
+
 
         <Button
             android:layout_width="match_parent"
@@ -145,6 +159,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:onClick="getFirstPageAndRankList"
-            android:text="使用zip获取排行列表与首页列表数据，这是窜行，" />
+            android:text="使用map获取排行列表与首页列表数据，这是窜行，" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="registerAndLogin2"
+            android:text="使用flatmap实现注册后自动登陆" />
     </LinearLayout>
 </ScrollView>

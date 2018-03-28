@@ -18,6 +18,12 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
     }
 
+
+    public void testRxjava(View v) {
+        RxjavaApiUtil.testRxjava();
+    }
+
+    // Observable
     public void subscribeObserver(View v) {
         RxjavaApiUtil.subscribeObserver();
     }
@@ -77,6 +83,12 @@ public class MainActivity extends AppCompatActivity {
         RxjavaApiUtil.testZipDiffenrentThread();
     }
 
+    public void testZipDiffenrentThread2(View v) {
+        RxjavaApiUtil.testZipDiffenrentThread2();
+    }
+
+
+
     public void testShowUIforMultipartRequest(View v) {
         ApiService.testZip();
     }
@@ -101,7 +113,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     public void testFlowable4(View v) {
-        RxjavaApiUtil.testFlowable4();
+        RxjavaApiUtil.testFlowable4(getApplicationContext());
     }
 
 
@@ -139,6 +151,11 @@ public class MainActivity extends AppCompatActivity {
 
     public void getFirstPageAndRankList(View v) {
         ApiService.getFirstPageAndRankList();
+    }
+
+
+    public void registerAndLogin2(View v) {
+        ApiService.registerAndLogin2(getApplicationContext());
     }
 
     @Override

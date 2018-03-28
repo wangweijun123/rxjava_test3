@@ -125,12 +125,84 @@ public class ApiService {
     }
 
 
+    private void registerAndLogin(final Context mContext) {
+        final Api api = createRetrofit().create(Api.class);
+        api.register(new RegisterRequest())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(new Consumer<RegisterResponse>() {//
+                    @Override
+                    public void accept(RegisterResponse registerResponse) throws Exception {
+                        Log.i(TAG, "register success tid:" + Thread.currentThread().getId());
+                        Toast.makeText(mContext, "注册成功", Toast.LENGTH_LONG).show();
+                    }
+                })
+                .observeOn(Schedulers.io())
+                .flatMap(new Function<RegisterResponse, ObservableSource<LoginResponse>>() {
+                    @Override
+                    public ObservableSource<LoginResponse> apply(RegisterResponse registerResponse) throws Exception {
+                        // 这里注册返回了结果可以供自动登陆使用
+                        Log.i(TAG, "login... tid:" + Thread.currentThread().getId());
+                        return api.login(new LoginRequest());
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<LoginResponse>() {
+                    @Override
+                    public void accept(LoginResponse loginResponse) throws Exception {
+                        Log.i(TAG, "login success tid:" + Thread.currentThread().getId());
+                    }
+                });
+
+    }
+
+
+    public static void registerAndLogin2(final Context mContext) {
+        Observable.create(new ObservableOnSubscribe<RegisterResponse>() {
+            @Override
+            public void subscribe(ObservableEmitter<RegisterResponse> emitter) throws Exception {
+                Log.i(TAG, "register... tid:" + Thread.currentThread().getId());
+                emitter.onNext(new RegisterResponse("wangweijun", "123"));
+            }
+        }).subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(new Consumer<RegisterResponse>() {
+                    @Override
+                    public void accept(RegisterResponse registerResponse) throws Exception {
+                        Log.i(TAG, "register success " + registerResponse.name + ", pwd:"
+                                + registerResponse.pwd + " tid:" + Thread.currentThread().getId());
+                    }
+                })
+                .observeOn(Schedulers.io())
+                .flatMap(new Function<RegisterResponse, ObservableSource<LoginResponse>>() {
+                    @Override
+                    public ObservableSource<LoginResponse> apply(final RegisterResponse registerResponse) throws Exception {
+
+                        return Observable.create(new ObservableOnSubscribe<LoginResponse>() {
+                            @Override
+                            public void subscribe(ObservableEmitter<LoginResponse> e) throws Exception {
+                                Log.i(TAG, "使用注册成功的参数去登陆:" + registerResponse.name + "， "
+                                        + registerResponse.pwd + " tid:" + Thread.currentThread().getId());
+                                e.onNext(new LoginResponse(registerResponse.name, registerResponse.pwd));
+                            }
+                        });
+                    }
+                }).observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Consumer<LoginResponse>() {
+                    @Override
+                    public void accept(LoginResponse s) throws Exception {
+                        Log.d(TAG, "login success:" + s.name + ", pwd:" + s.pwd + ", tid:" + Thread.currentThread().getId());
+                    }
+                });
+
+    }
+
 
     public void testAccessDatabase(final Context mContext) {
 
     }
 
-//    public Observable<List<Record>> readAllRecords(final Context mContext) {
+    //    public Observable<List<Record>> readAllRecords(final Context mContext) {
 //        return Observable.create(new ObservableOnSubscribe<List<Record>>() {
 //            @Override
 //            public void subscribe(ObservableEmitter<List<Record>> emitter) throws Exception {
@@ -151,7 +223,7 @@ public class ApiService {
 //            }
 //        }).subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread());
 //    }
-private static final String TAG = "XX";
+    private static final String TAG = "OkHttp";
 
     public static void RxRetrofitList() {
         Api service = GenServiceUtil.createService(Api.class);
@@ -218,7 +290,7 @@ private static final String TAG = "XX";
                     @Override
                     public List<ApiService.Contributor> apply(List<ApiService.Contributor> userFollowerBeen) {
                         // 这里已经到了下游，所以使用observeOn指定线程
-                        Log.i(TAG, "map1 apply tid:"+Thread.currentThread().getName());
+                        Log.i(TAG, "map1 apply tid:" + Thread.currentThread().getName());
                         for (ApiService.Contributor bean : userFollowerBeen) {
 //                            String name = "";
                         }
@@ -235,7 +307,7 @@ private static final String TAG = "XX";
 //                                return o1.getLogin().compareTo(o2.getLogin());
 //                            }
 //                        });
-                        Log.i(TAG, "map2 apply tid:"+Thread.currentThread().getName());
+                        Log.i(TAG, "map2 apply tid:" + Thread.currentThread().getName());
                         return userFollowerBean;
                     }
                 })
@@ -244,13 +316,13 @@ private static final String TAG = "XX";
 
                     @Override
                     public void onSubscribe(Disposable d) {
-                        Log.i(TAG, "onSubscribe tid:"+Thread.currentThread().getName());
+                        Log.i(TAG, "onSubscribe tid:" + Thread.currentThread().getName());
                     }
 
                     @Override
                     public void onNext(List<ApiService.Contributor> list) {
-                        Log.i(TAG, "onNext tid:"+Thread.currentThread().getName());
-                        for (int i=0; i<list.size(); i++) {
+                        Log.i(TAG, "onNext tid:" + Thread.currentThread().getName());
+                        for (int i = 0; i < list.size(); i++) {
                             Log.i(TAG, list.get(i).toString());
                         }
                     }
@@ -275,13 +347,13 @@ private static final String TAG = "XX";
         myObserve
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
-                .concatMap(new Function<List<Contributor>, ObservableSource<Contributor>>() {
+                .concatMap(new Function<List<Contributor>, ObservableSource<Contributor>>() {// 串联
                     @Override
                     public ObservableSource<Contributor> apply(final List<Contributor> contributors) throws Exception {
                         return Observable.create(new ObservableOnSubscribe<Contributor>() {
                             @Override
                             public void subscribe(ObservableEmitter<Contributor> emitter) throws Exception {
-                                Log.i("wang", "subscribe tid:"+Thread.currentThread().getId());
+                                Log.i("wang", "subscribe tid:" + Thread.currentThread().getId());
                                 for (Contributor contributor : contributors) {
                                     Log.i("wang", " emitter 发射 contributor:" + contributor);
                                     emitter.onNext(contributor);
@@ -292,24 +364,27 @@ private static final String TAG = "XX";
                     }
                 }).observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Observer<Contributor>() {
-                        @Override
-                        public void onSubscribe(Disposable d) {
-                            Log.i("wang", "onSubscribe tid:"+Thread.currentThread().getId());
-                        }
-                        @Override
-                        public void onNext(Contributor value) {
-                            Log.i("wang", "onNext tid:"+Thread.currentThread().getId()+", value:"+value);
-                        }
-                        @Override
-                        public void onError(Throwable e) {
+                               @Override
+                               public void onSubscribe(Disposable d) {
+                                   Log.i("wang", "onSubscribe tid:" + Thread.currentThread().getId());
+                               }
 
-                        }
-                        @Override
-                        public void onComplete() {
-                            Log.i("wang", "onComplete tid:"+Thread.currentThread().getId());
-                        }
-                }
-        );
+                               @Override
+                               public void onNext(Contributor value) {
+                                   Log.i("wang", "onNext tid:" + Thread.currentThread().getId() + ", value:" + value);
+                               }
+
+                               @Override
+                               public void onError(Throwable e) {
+
+                               }
+
+                               @Override
+                               public void onComplete() {
+                                   Log.i("wang", "onComplete tid:" + Thread.currentThread().getId());
+                               }
+                           }
+                );
     }
 
     public static final String API_URL = "https://api.github.com";
@@ -325,13 +400,16 @@ private static final String TAG = "XX";
 
         @Override
         public String toString() {
-            return "login:"+login+", contributions:"+contributions;
+            return "login:" + login + ", contributions:" + contributions;
         }
     }
 
-    /** 用户模块的测试地址 */
+    /**
+     * 用户模块的测试地址
+     */
     public static final String URL_USER_TEST = "http://36.110.161.65";
     public static final String URL_BASIC_SERVICE_TEST = "http://mapi.letvstore.com/";
+
     public class MyResp {
         String status;
     }
@@ -351,8 +429,8 @@ private static final String TAG = "XX";
                 .build();
         Api service = retrofit.create(Api.class);
         Map<String, String> map = new HashMap<>();
-        map.put("isgt" , "1");
-        map.put("pagefrom" , "0");
+        map.put("isgt", "1");
+        map.put("pagefrom", "0");
         map.put("packagenames", "com.quicksdk.qnyh.leshi");
         map.put("versioncodes", "18");
         map.put("record", "4,30");
@@ -363,15 +441,15 @@ private static final String TAG = "XX";
 
         Response<MyResp> resp = repos.execute();
         MyResp list = resp.body();
-        Log.i(TAG,"list status:"+list.status);
+        Log.i(TAG, "list status:" + list.status);
     }
 
 
     public static void doPost2() {
         Api service = GenStoreServiceUtil.createService(Api.class);
         Map<String, String> map = new HashMap<>();
-        map.put("isgt" , "1");
-        map.put("pagefrom" , "0");
+        map.put("isgt", "1");
+        map.put("pagefrom", "0");
         map.put("packagenames", "com.quicksdk.qnyh.leshi");
         map.put("versioncodes", "18");
         map.put("record", "4,30");
@@ -386,12 +464,12 @@ private static final String TAG = "XX";
 
                     @Override
                     public void onSubscribe(Disposable d) {
-                        Log.i(TAG, "onSubscribe tid:"+Thread.currentThread().getName());
+                        Log.i(TAG, "onSubscribe tid:" + Thread.currentThread().getName());
                     }
 
                     @Override
                     public void onNext(ApiService.MyResp list) {
-                        Log.i(TAG, "onNext tid:"+Thread.currentThread().getName()+", status:"+list.status);
+                        Log.i(TAG, "onNext tid:" + Thread.currentThread().getName() + ", status:" + list.status);
                     }
 
                     @Override
@@ -442,11 +520,14 @@ private static final String TAG = "XX";
     }
 
 
+    /**
+     * zip 做并行
+     */
     public static void testZip() {
         Api service = GenStoreServiceUtil.createService(Api.class);
         Map<String, String> map = new HashMap<>();
-        map.put("isgt" , "1");
-        map.put("pagefrom" , "0");
+        map.put("isgt", "1");
+        map.put("pagefrom", "0");
         map.put("packagenames", "com.quicksdk.qnyh.leshi");
         map.put("versioncodes", "18");
         map.put("record", "4,30");
@@ -458,19 +539,19 @@ private static final String TAG = "XX";
         Observable<ApiService.RankResp> observe2 = service.doGet("1", "1", "RANK_HOT").subscribeOn(Schedulers.io());
 
         Observable.zip(observe1, observe2,
-        new BiFunction<ApiService.MyResp, ApiService.RankResp, MergeResp>(){
-            @Override
-            public MergeResp apply(MyResp myResp, RankResp myResp2) throws Exception {
-                Log.i(TAG, "apply : tid:"+Thread.currentThread().getName());
-                MergeResp mergeResp = new MergeResp();
-                mergeResp.status = "xxxxxx";
-                return mergeResp;
-            }
-        }).observeOn(AndroidSchedulers.mainThread())
+                new BiFunction<ApiService.MyResp, ApiService.RankResp, MergeResp>() {
+                    @Override
+                    public MergeResp apply(MyResp myResp, RankResp myResp2) throws Exception {
+                        Log.i(TAG, "apply : tid:" + Thread.currentThread().getId());
+                        MergeResp mergeResp = new MergeResp();
+                        mergeResp.status = "xxxxxx";
+                        return mergeResp;
+                    }
+                }).observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new Consumer<MergeResp>() {
                     @Override
                     public void accept(MergeResp mergeResp) throws Exception {
-                        Log.i(TAG, "accept :"+mergeResp.status);
+                        Log.i(TAG, "accept :" + mergeResp.status + " tid:" + Thread.currentThread().getId());
                     }
                 }, new Consumer<Throwable>() {
                     @Override
@@ -482,11 +563,12 @@ private static final String TAG = "XX";
 
     }
 
+
     public static void getFirstPageAndRankList() {
         final Api api = GenStoreServiceUtil.createService(Api.class);
         Map<String, String> map = new HashMap<>();
-        map.put("isgt" , "1");
-        map.put("pagefrom" , "0");
+        map.put("isgt", "1");
+        map.put("pagefrom", "0");
         map.put("packagenames", "com.quicksdk.qnyh.leshi");
         map.put("versioncodes", "18");
         map.put("record", "4,30");
@@ -499,14 +581,14 @@ private static final String TAG = "XX";
                     @Override
                     public void accept(ApiService.MyResp registerResponse) throws Exception {
                         //先根据注册的响应结果去做一些操作
-                        Log.i(TAG, "doOnNext accept tid:"+Thread.currentThread().getName());
+                        Log.i(TAG, "doOnNext accept tid:" + Thread.currentThread().getName());
                     }
                 })
                 .observeOn(Schedulers.io())                 //回到IO线程去发起登录请求
                 .flatMap(new Function<ApiService.MyResp, ObservableSource<ApiService.RankResp>>() {
                     @Override
                     public ObservableSource<ApiService.RankResp> apply(ApiService.MyResp registerResponse) throws Exception {
-                        Log.i(TAG, " apply tid:"+Thread.currentThread().getName());
+                        Log.i(TAG, " apply tid:" + Thread.currentThread().getName());
                         return api.doGet("1", "1", "RANK_HOT");
                     }
                 })
@@ -514,13 +596,10 @@ private static final String TAG = "XX";
                 .subscribe(new Consumer<ApiService.RankResp>() {
                     @Override
                     public void accept(ApiService.RankResp response) throws Exception {
-                        Log.i(TAG, "subscribe accept tid:"+Thread.currentThread().getName());
+                        Log.i(TAG, "subscribe accept tid:" + Thread.currentThread().getName());
                     }
                 });
     }
-
-
-
 
 
     public static Map<String, String> getCommonParamsMap() {

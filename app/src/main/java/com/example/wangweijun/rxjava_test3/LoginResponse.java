@@ -5,4 +5,11 @@ package com.example.wangweijun.rxjava_test3;
  */
 
 class LoginResponse extends Object {
+
+    String name;
+    String pwd;
+    public LoginResponse(String name, String pwd) {
+        this.name = name;
+        this.pwd = pwd;
+    }
 }

@@ -14,7 +14,7 @@ public class GenStoreServiceUtil {
 
     private static final String BASE_URL = ApiService.URL_BASIC_SERVICE_TEST;;
 
-    private static OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+    private static OkHttpClient.Builder httpClient = new OkHttpClient.Builder().addInterceptor(new com.example.wangweijun.rxjava_test3.HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY));
 
 
     private static Retrofit.Builder builder = new Retrofit.Builder()
