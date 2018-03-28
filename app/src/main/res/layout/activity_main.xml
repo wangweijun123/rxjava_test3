@@ -7,6 +7,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
+
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="loadDataFromDatabaseAndNetwork"
+            android:text="读取数据库缓存，显示，网络加载，更新数据库，刷新界面" />
+
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -74,10 +82,24 @@
             android:text="zip 多个上游(事件)在同一个线程" />
 
         <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="testZipDiffenrentThread"
+        android:text="zip 多个上游(事件,多个api并发请求在不同线程，全部完成后显示后)在多个线程(快)" />
+
+        <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:onClick="testZipDiffenrentThread"
-            android:text="zip 多个上游(事件,多个api并发请求在不同线程，全部完成后显示后)在多个线程(快)" />
+            android:onClick="testZipDiffenrentThread2"
+            android:text="zip 多个上游2" />
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:onClick="testZipArrayMany"
+            android:text="zipArrayMany" />
+
+
 
         <Button
             android:layout_width="match_parent"

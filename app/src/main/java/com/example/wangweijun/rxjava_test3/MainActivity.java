@@ -24,6 +24,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Observable
+    public void loadDataFromDatabaseAndNetwork(View v) {
+        RxjavaApiUtil.loadDataFromDatabaseAndNetwork();
+    }
+
     public void subscribeObserver(View v) {
         RxjavaApiUtil.subscribeObserver();
     }
@@ -83,10 +87,15 @@ public class MainActivity extends AppCompatActivity {
         RxjavaApiUtil.testZipDiffenrentThread();
     }
 
+
     public void testZipDiffenrentThread2(View v) {
         RxjavaApiUtil.testZipDiffenrentThread2();
     }
 
+
+    public void testZipArrayMany(View v) {
+        RxjavaApiUtil.testZipArrayMany();
+    }
 
 
     public void testShowUIforMultipartRequest(View v) {

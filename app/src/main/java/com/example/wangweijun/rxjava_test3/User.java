@@ -5,5 +5,13 @@ package com.example.wangweijun.rxjava_test3;
  */
 
 public class User {
+    Pig pig;
+    Record record;
+
     public int id;
+
+//    @Override
+//    public String toString() {
+//        return "[User id:"+id+" ]";
+//    }
 }
