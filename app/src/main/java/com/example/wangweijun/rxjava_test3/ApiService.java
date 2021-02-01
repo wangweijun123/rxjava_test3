@@ -521,7 +521,7 @@ public class ApiService {
 
 
     /**
-     * zip 做并行
+     * zip 做并行,多个请求并行，合并结果返回,
      */
     public static void testZip() {
         Api service = GenStoreServiceUtil.createService(Api.class);

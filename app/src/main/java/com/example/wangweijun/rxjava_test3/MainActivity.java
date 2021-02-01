@@ -18,6 +18,10 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
     }
 
+    public void testRxjavaThread(View view) {
+        RxjavaApiUtil.testRxjavaThread();
+    }
+
 
     public void testRxjava(View v) {
         RxjavaApiUtil.testRxjava();
@@ -178,4 +182,6 @@ public class MainActivity extends AppCompatActivity {
         disposables.clear();
         super.onDestroy();
     }
+
+
 }

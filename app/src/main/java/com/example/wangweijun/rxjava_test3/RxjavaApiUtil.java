@@ -1,6 +1,7 @@
 package com.example.wangweijun.rxjava_test3;
 
 import android.content.Context;
+import android.os.Looper;
 import android.util.Log;
 
 import org.reactivestreams.Subscriber;
@@ -25,6 +26,7 @@ import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Consumer;
@@ -39,6 +41,79 @@ import io.reactivex.schedulers.Schedulers;
 public class RxjavaApiUtil {
     private static final String TAG = "RxjavaApiUtil";
 
+    public static void testRxjavaThread(){
+        // 背观察者
+        Observable.create(new ObservableOnSubscribe<String>() {
+            @Override
+            public void subscribe(ObservableEmitter<String> e) throws Exception {
+                // 被观察者产生事件, 使用emitter
+                System.out.println("发送字符串：12 " +printThread());
+                e.onNext("12");
+            }
+        }).subscribeOn(Schedulers.io())// 指定被观察者运行的线程
+                .observeOn(AndroidSchedulers.mainThread())// 指定观察者运行的线程
+                .subscribe(new Observer<String>() {
+                    @Override
+                    public void onSubscribe(@NonNull Disposable d) {
+                        System.out.println("onSubscribe");
+                    }
+
+                    @Override
+                    public void onNext(@NonNull String s) {
+                        System.out.println("接收到.."+s + printThread());
+                    }
+
+                    @Override
+                    public void onError(@NonNull Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+
+        // 分开写为何不切换
+        /*Observable<String> stringObservable = Observable.create(new ObservableOnSubscribe<String>() {
+            @Override
+            public void subscribe(ObservableEmitter<String> e) throws Exception {
+                // 事件源业务代码
+                System.out.println("发送字符串：12 " + printThread());
+                e.onNext("12");
+            }
+        });
+        Observer<String> observer = new Observer<String>() {
+            @Override
+            public void onSubscribe(@NonNull Disposable d) {
+                System.out.println("onSubscribe");
+            }
+
+            @Override
+            public void onNext(@NonNull String s) {
+                System.out.println("接收到.."+s + printThread());
+            }
+
+            @Override
+            public void onError(@NonNull Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        };
+        stringObservable.subscribeOn(Schedulers.io());
+        stringObservable.observeOn(Schedulers.io());
+        stringObservable.subscribe(observer);*/
+
+    }
+
+    public static String printThread() {
+        return "  " +Thread.currentThread().getName() + " " + Thread.currentThread().getId();
+    }
+
     public static void testRxjava() {
         // ObservableOnSubscribe 事件源, 即生产者
         Observable.create(new ObservableOnSubscribe<String>() {
@@ -49,7 +124,7 @@ public class RxjavaApiUtil {
                 e.onNext("12");
             }
         })
-        .observeOn(Schedulers.io())// 只影响后面的流程(在这个线程执行)
+        .observeOn(Schedulers.io())// 指定观察者的运行线程
         .map(new Function<String, String>() {// 转换
             @Override
             public String apply(String s) throws Exception {
@@ -65,7 +140,7 @@ public class RxjavaApiUtil {
                 return Integer.parseInt(s);
             }
         })
-        .subscribeOn(Schedulers.io())
+        .subscribeOn(Schedulers.io()) // 指定被观察者运行的线程
         .observeOn(AndroidSchedulers.mainThread())
         .subscribe(new Consumer<Integer>() {
             @Override
@@ -97,11 +172,15 @@ public class RxjavaApiUtil {
 
         // Observable.subscribe(xxx)   --内部调用-->   ObservableOnSubscribe.subscribe---->
         // 产生事件,由Emitter发送next下发送事件，订阅者消费事件
+    // 这一窜的事件，或者说事件流  map 操作，float 操作
+    // 读取数据数据库(io)  --> 刷新ui(main)  --> 网络下载db(io)---> 更新数据库  ---> 刷新ui
     public static void loadDataFromDatabaseAndNetwork() {
         Observable.create(new ObservableOnSubscribe<List<User>>() {
             @Override
             public void subscribe(ObservableEmitter<List<User>> emitter) throws Exception {
-                Log.i(TAG, "正在读取数据库缓存 tid:" + Thread.currentThread().getId());
+                checkMainThread();
+                Log.i(TAG, "正在读取数据库缓存 tid:"
+                        + Thread.currentThread().getId() + ", threadname:"+Thread.currentThread().getName());
                 Thread.sleep(3000);
                 Log.i(TAG, "读取数据库缓存完毕");
                 List<User> list = new ArrayList<User>();
@@ -117,7 +196,9 @@ public class RxjavaApiUtil {
                 .doOnNext(new Consumer<List<User>>() {
                     @Override
                     public void accept(List<User> users) throws Exception {
-                        Log.i(TAG, "数据库缓存返回 accept tid:" + Thread.currentThread().getId());
+                        checkMainThread();
+                        Log.i(TAG, "数据库缓存返回 accept tid:" + Thread.currentThread().getId()
+                                + ", threadname:"+Thread.currentThread().getName());
                         for (User user : users) {
                             Log.i(TAG, user.toString());
                         }
@@ -129,7 +210,9 @@ public class RxjavaApiUtil {
                         return Observable.create(new ObservableOnSubscribe<List<Record>>() {
                             @Override
                             public void subscribe(ObservableEmitter<List<Record>> emitter) throws Exception {
-                                Log.i(TAG, "正在网络加载 tid:" + Thread.currentThread().getId());
+                                checkMainThread();
+                                Log.i(TAG, "正在网络加载 tid:" + Thread.currentThread().getId()
+                                        + ", threadname:"+Thread.currentThread().getName());
                                 Thread.sleep(3000);
                                 Log.i(TAG, "网络加载完毕");
                                 List<Record> list = new ArrayList<Record>();
@@ -150,7 +233,9 @@ public class RxjavaApiUtil {
                         return Observable.create(new ObservableOnSubscribe<List<Pig>>() {
                             @Override
                             public void subscribe(ObservableEmitter<List<Pig>> emitter) throws Exception {
-                                Log.i(TAG, "更新数据库缓存 tid:" + Thread.currentThread().getId());
+                                checkMainThread();
+                                Log.i(TAG, "更新数据库缓存 tid:" + Thread.currentThread().getId()
+                                        + ", threadname:"+Thread.currentThread().getName());
                                 Thread.sleep(3000);
                                 Log.i(TAG, "更新数据库缓存完毕");
                                 List<Pig> list = new ArrayList<Pig>();
@@ -168,12 +253,18 @@ public class RxjavaApiUtil {
                 .subscribe(new Observer<List<Pig>>() {
                     @Override
                     public void onSubscribe(Disposable d) {
-                        Log.i(TAG, "onSubscribe tid:" + Thread.currentThread().getId());
+                        checkMainThread();
+                        Log.i(TAG, "onSubscribe tid:" + Thread.currentThread().getId()
+                                + ", threadname:"+Thread.currentThread().getName());
+
+
                     }
 
                     @Override
                     public void onNext(List<Pig> list) {
-                        Log.i(TAG, "onNext tid:" + Thread.currentThread().getId());
+                        checkMainThread();
+                        Log.i(TAG, "onNext tid:" + Thread.currentThread().getId()
+                                + ", threadname:"+Thread.currentThread().getName());
                         for (Pig pig : list) {
                             Log.i(TAG, pig.toString());
                         }
@@ -186,6 +277,7 @@ public class RxjavaApiUtil {
 
                     @Override
                     public void onComplete() {
+                        checkMainThread();
                         Log.i(TAG, "onComplete tid:" + Thread.currentThread().getId());
                     }
                 });
@@ -295,8 +387,8 @@ public class RxjavaApiUtil {
             }
         };
 
-        observable.subscribeOn(Schedulers.newThread()) // 指定的是上游发送事件的线程
-                .observeOn(AndroidSchedulers.mainThread()) // 指定的是下游接收事件的线程.
+        observable.subscribeOn(Schedulers.newThread()) // 指定的是被观察者发送事件的线程
+                .observeOn(AndroidSchedulers.mainThread()) // 指定的是观察者接收事件的线程.
                 .subscribe(consumer);
     }
 
@@ -323,7 +415,7 @@ public class RxjavaApiUtil {
                 Log.i(TAG, "onNext: " + integer);
             }
         };
-        //
+        // 多次指定线程，后面的无效
         observable.subscribeOn(Schedulers.newThread())// 指定的是上游发送事件的线程
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())// 指定的是下游接收事件的线程.
@@ -383,7 +475,7 @@ public class RxjavaApiUtil {
                 User user = new User();
                 user.id = params;
                 emitter.onNext(user);
-
+                // 被观察者可以控制状态(success or failed)
                 if (flag) {
                     emitter.onComplete();
                 } else {
@@ -397,12 +489,12 @@ public class RxjavaApiUtil {
             public void onSubscribe(Disposable d) {
 //                disposables.add(d);
                 // 显示loading 进度条
-                Log.i(TAG, "observer  onSubscribe tid:" + Thread.currentThread().getId() + " 显示loading 进度条");
+                Log.i(TAG, "observer  onSubscribe tid:" + printThread()+ " 显示loading 进度条");
             }
 
             @Override
             public void onNext(User value) {
-                Log.i(TAG, "observer  onNext value:" + value.id + ", tid:" + Thread.currentThread().getId());
+                Log.i(TAG, "observer  onNext value:" + value.id + printThread());
             }
 
             @Override
@@ -431,10 +523,10 @@ public class RxjavaApiUtil {
                 Log.i(TAG, "subscribe tid:" + Thread.currentThread().getId());
                 Log.i(TAG, "send 1");
                 emitter.onNext(1);
-                Log.i(TAG, "send 2");
+                /*Log.i(TAG, "send 2");
                 emitter.onNext(2);
                 Log.i(TAG, "send 3");
-                emitter.onNext(3);
+                emitter.onNext(3);*/
             }
         }).subscribeOn(Schedulers.io())
             .map(new Function<Integer, String>() {
@@ -454,16 +546,17 @@ public class RxjavaApiUtil {
     }
 
     public static void testflatMap() {
+        // flat map 多个请求 窜性执行的时候，因为下一个请求需要上一个请求的的结果
         Observable.create(new ObservableOnSubscribe<Integer>() {
             @Override
             public void subscribe(ObservableEmitter<Integer> emitter) throws Exception {
                 Log.d(TAG, "00000 tid:" + Thread.currentThread().getId() + ", name:" + Thread.currentThread().getName());
                 emitter.onNext(1);
-                emitter.onNext(2);
+//                emitter.onNext(2);
                 emitter.onComplete();
             }
-        }).subscribeOn(Schedulers.io())// 指定上游thread，上游只有一个
-                .observeOn(Schedulers.newThread()) // 指定下游thread，每一个下游泡在每个指定的线程中
+        }).subscribeOn(Schedulers.io())// 指定 被观察者运行的线程
+//                .observeOn(Schedulers.newThread()) // 指定观察者所在的线程
                 .flatMap(new Function<Integer, ObservableSource<String>>() {
                     @Override
                     public ObservableSource<String> apply(final Integer integer) throws Exception {
@@ -639,7 +732,9 @@ public class RxjavaApiUtil {
                 emitter.onComplete();
             }
         }).subscribeOn(Schedulers.io());
-
+        /**
+         * 合并两个请求并发，一起返回结果，显示界面
+         */
         Observable.zip(observable1, observable2, new BiFunction<Pig, Record, User>() {
             @Override
             public User apply(Pig pig, Record record) throws Exception {
@@ -1013,4 +1108,12 @@ public class RxjavaApiUtil {
         });
     }
 
+    public void testx() {
+    }
+
+    public static boolean checkMainThread() {
+        boolean re = Thread.currentThread() == Looper.getMainLooper().getThread();
+        Log.i(TAG, "checkMainThread :" + re);
+        return re;
+    }
 }
